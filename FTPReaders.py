@@ -25,6 +25,9 @@ class FTPReader:
 
     @property
     def url(self):
+
+
+
         return self._url
 
     @url.setter
