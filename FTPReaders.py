@@ -50,7 +50,6 @@ class RinexReader(FTPReader):
 
     def Read(self, path, name):
         self._link = self._link + path + "/" + name
-        print(self._link)
         if not os.path.exists(name):
             wget.download(self._link)
         else:
