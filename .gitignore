@@ -1,4 +1,5 @@
 *.sp3
+*Brdc*.*
 
 .idea/**/workspace.xml
 .idea/**/tasks.xml
