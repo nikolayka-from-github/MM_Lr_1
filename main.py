@@ -5,8 +5,8 @@ Url = "ftp://ftp.glonass-iac.ru"
 Path = "MCC/PRODUCTS/23340/final"
 File_name = "Sta22913.sp3"
 
-Path_r = "MCC/BRDC/2023"
-File_name_r = "Brdc0420.23g"
+Path_r = "MCC/BRDC/2024"
+File_name_r = "Brdc0670.24g"
 
 # sp3 = SP3Reader(url=Url)
 # data = sp3.Read(Path, File_name)
