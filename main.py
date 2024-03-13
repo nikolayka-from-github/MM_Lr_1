@@ -10,6 +10,9 @@ Path_r = "MCC/BRDC/2023"
 File_name_r = "Brdc0420.23g"
 
 sp3 = SP3Reader(url=Url)
+
+
+
 sp3.Read(Path, File_name)
 
 # rin = RinexReader(url=Url)
