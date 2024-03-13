@@ -18,7 +18,10 @@ class FTPReader:
         self._link = url + "/"
 
     def Read(self, path, name):
-        return NotImplementedError(f"In the <{self.__name__}> class, the method must be redefined <Read>")
+        self._link = self._link + path + "/" + name
+        if not os.path.exists(name):
+            wget.download(self._link)
+        # return NotImplementedError(f"In the <{self.__name__}> class, the method must be redefined <Read>")
 
     @property
     def url(self):
@@ -35,11 +38,11 @@ class SP3Reader(FTPReader):
         super().__init__(url, user_name, user_pass)
 
     def Read(self, path, name):
-        self._link = self._link + path + "/" + name
-        if not os.path.exists(name):
-            wget.download(self._link)
-        else:
-            print("Working with a file <...>")
+        super().Read(path, name)
+        with open(name) as file:
+            while line := file.readline():
+                print(line.rstrip())
+
         return 1
 
 

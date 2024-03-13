@@ -12,5 +12,5 @@ File_name_r = "Brdc0420.23g"
 sp3 = SP3Reader(url=Url)
 sp3.Read(Path, File_name)
 
-rin = RinexReader(url=Url)
-rin.Read(Path_r, File_name_r)
+# rin = RinexReader(url=Url)
+# rin.Read(Path_r, File_name_r)
