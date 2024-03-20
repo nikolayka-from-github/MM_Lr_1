@@ -1,6 +1,8 @@
 # import re
 import wget
 import os.path
+
+
 # import math
 
 
@@ -135,7 +137,7 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
             if line[i][v_len - 3] == "+":
                 sign_pow_exp = 1
             value__exp = float(line[i][0:v_len - 4])
-            line[i] = value__exp*pow(10, sign_pow_exp*pow_exp)
+            line[i] = value__exp * pow(10, sign_pow_exp * pow_exp)
         return line
 
     @staticmethod
@@ -161,6 +163,70 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
                 bool_d = False
         return arr_line
 
+    def Read_1(self, path, name):
+        super().Read(path, name)
+
+        initialize_time = True
+        initialize_id = True
+
+        reading_data = False
+        id_sheet = []
+        time_sheet = []
+
+        current_time = 0.
+        current_time_temp = 0.
+        previous_time = 0.
+        counter_broad = 0
+        temp_arr_pos = []
+        with open(name) as file:
+            while line := file.readline():
+                line = line.split()
+
+                if line[0][0] == 'R':
+                    reading_data = True
+
+                    if initialize_time:
+                        initialize_time = False
+                        [self.__y_0, self.__M_0, self.__d_0,
+                         self.__h_0, self.__m_0, self.__s_0] = self.split_to_time(line)
+                        current_time_temp = (self.__d_0 - self.__d_0) * 24 + self.__h_0 + self.__m_0 / 60
+                        id_sheet.append(line[0])
+                        time_sheet.append(current_time_temp)
+                        self.__All_dict[current_time_temp] = []
+                    else:
+                        line_temp = self.split_to_time(line)
+                        current_time_temp = (line_temp[2] - self.__d_0) * 24 + line_temp[3] + line_temp[4] / 60
+                        if not (current_time_temp in self.__All_dict):
+                            self.__All_dict[current_time_temp] = []
+                            time_sheet.append(current_time_temp)
+                            initialize_id = False
+                        if initialize_id:
+                            id_sheet.append(line[0])
+                elif reading_data:
+                    counter_broad += 1
+                    if len(line) == 4:
+                        line = self.split_to_exp(line)
+                    else:
+                        temp_line = self.split_to_f_value(line)
+                        line = self.split_to_exp(temp_line)
+
+                    temp_arr_pos.append(line[0])
+                    if counter_broad == 3:
+                        flag_broad = False
+                        self.__All_dict[current_time_temp].append(temp_arr_pos)
+                        temp_arr_pos = []
+                        counter_broad = 0
+        self.__All_dict["Numb_Sat"] = len(id_sheet)
+        self.__All_dict["Id_Sat"] = id_sheet
+        self.__All_dict["Arr_Time"] = time_sheet
+        # print(self.__All_dict["Numb_Sat"])
+        # print(self.__All_dict["Id_Sat"])
+        # print(self.__All_dict["Arr_Time"])
+        # self.__All_dict[current_time_temp]     self.__All_dict[0.25]
+        # print(current_time_temp, len(self.__All_dict[current_time_temp]),  self.__All_dict[23.75])
+        # print(time_sheet)
+        # print(id_sheet)
+        return self.__All_dict
     def Read(self, path, name):
         super().Read(path, name)
         with open(name) as file:
@@ -181,7 +247,7 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
                     if init_time:
                         init_time = False
                         [self.__y_0, self.__M_0, self.__d_0,
-                         self.__h_0, self.__m_0,  self.__s_0] = self.split_to_time(line)
+                         self.__h_0, self.__m_0, self.__s_0] = self.split_to_time(line)
                         temp_curr_time = (self.__d_0 - self.__d_0) * 24 + self.__h_0 + self.__m_0 / 60
                         self.__All_dict[temp_curr_time] = []
                         temp_curr_time_1 = temp_curr_time
@@ -189,6 +255,7 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
                         line = self.split_to_time(line)
                         temp_curr_time = (line[2] - self.__d_0) * 24 + line[3] + line[4] / 60
                         if not temp_curr_time_1 == temp_curr_time:
+                            # print(temp_curr_time_1, temp_curr_time)
                             self.__All_dict[temp_curr_time] = []
                             self.__Arr_Time.append(temp_curr_time_1)
                             if flag_to_id:
