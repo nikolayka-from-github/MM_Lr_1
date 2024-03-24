@@ -1,16 +1,20 @@
+from FTPReaders import SP3Reader, RINReader
+from adapters import SP3ReadAdapter, RINReadAdapter
+from client import Client
+"""
+# coding=utf-8
 # from FTPReaders import SP3Reader
-from FTPReaders import RinexReader, SP3Reader
-
-Url = "ftp://ftp.glonass-iac.ru"
-Path = "MCC/PRODUCTS/23340/final"
-File_name = "Sta22913.sp3"
-
-Path_r = "MCC/BRDC/2024"
-File_name_r = "Brdc0670.24g"
-
-sp3 = SP3Reader(url=Url)
-data = sp3.Read(Path, File_name)
-
+# from FTPReaders import RinexReader, SP3Reader
+#
+# Url = "ftp://ftp.glonass-iac.ru"
+# Path = "MCC/PRODUCTS/23340/final"
+# File_name = "Sta22913.sp3"
+#
+# Path_r = "MCC/BRDC/2024"
+# File_name_r = "Brdc0670.24g"
+#
+# sp3 = SP3Reader(url=Url)
+# data = sp3.reading(Path, File_name)
 
 # in data:
 # 'Arr_Time' ... list
@@ -24,21 +28,21 @@ data = sp3.Read(Path, File_name)
 # 'Arr_time[1]': ...
 # ...
 # 'Arr_time[end]': ...
+"""
 
-rin = RinexReader(url=Url)
-# data = rin.Read_1(Path_r, File_name_r)
-print(data)
-id_sat = 'R24'
-index_sat = data['Id_Sat'].index(id_sat)
-arr_time = data['Arr_Time']
+if __name__ == '__main__':
+    __url = "ftp://ftp.glonass-iac.ru"
+    __data__ = "27.08.2023"
+    __user_name = "Yakimenko"
 
-print(id_sat, index_sat)
-# print(arr_time)
+    full_path = "ftp://ftp.glonass-iac.ru/MCC/PRODUCTS/23360/final/Sta22942.sp3"
 
+    sp3 = SP3Reader()
+    sp3A = SP3ReadAdapter(url=__url, data=__data__, obj=sp3)
 
-for time in data['Arr_Time']:
-    print(data[time][index_sat])
+    rin = RINReader()
+    rinA = RINReadAdapter(url=__url, data=__data__, obj=rin)
+    cl = Client(user_name=__user_name, obj=sp3A)
+    cl.get_data("R17")
+    cl.plot()
 
-
-
-# Test arr:

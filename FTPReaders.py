@@ -1,40 +1,23 @@
-# import re
 import wget
 import os.path
 
 
-# import math
+class Readers:
+    def __init__(self, user_name="anon", user_pass=""):
+        self.user_name = user_name
+        self.user_pass = user_pass
+        self.file_name = ""
+
+    def downloading(self, path):
+        self.file_name = path.split("/")[-1]
+        if not os.path.exists(self.file_name):
+            wget.download(path)
+
+    def read(self, path):
+        return None
 
 
-class FTPReader:
-    _url = ""
-    _name = ""
-    _user_name = ""
-    _user_pass = ""
-    _link = ""
-
-    def __init__(self, url, user_name, user_pass):
-        self._url = url
-        self._user_name = user_name
-        self._user_pass = user_pass
-        self._link = url + "/"
-
-    def Read(self, path, name):
-        self._link = self._link + path + "/" + name
-        if not os.path.exists(name):
-            wget.download(self._link)
-        # return NotImplementedError(f"In the <{self.__name__}> class, the method must be redefined <Read>")
-
-    @property
-    def url(self):
-        return self._url
-
-    @url.setter
-    def url(self, url):
-        self._url = url
-
-
-class SP3Reader(FTPReader):
+class SP3Reader(Readers):
     __Numb_Sat = 0
     __Arr_Time = []
     __y_0 = 0
@@ -44,21 +27,53 @@ class SP3Reader(FTPReader):
     __m_0 = 0
     __s_0 = 0.
     __All_dict = {}
+    __NUMB = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-    def __init__(self, url, user_name="anonymous", user_pass=""):
-        super().__init__(url, user_name, user_pass)
+    def my_split(self, line: str):
+        new_line = []
+        new_line.append(line[0:4].replace(" ", ""))
+        new_line.append(line[4:18].replace(" ", ""))
+        new_line.append(line[18:32].replace(" ", ""))
+        new_line.append(line[32:46].replace(" ", ""))
+        new_line.append(line[46:60].replace(" ", ""))
+        # print(f"///{line[0:4]}///")
+        # print(f"///{line[4:18]}///")
+        # print(f"///{line[18:32]}///")
+        # print(f"///{line[32:46]}///")
+        # print(f"///{line[46:60]}///")
+        return new_line
 
-    def Read(self, path, name):
-        super().Read(path, name)
-        with open(name) as file:
+    def split_to_float(self, line):
+        temp_arr = []
+        temp_str = ""
+        i_ = ""
+        for i in line:
+            if i == "-" and i_ in self.__NUMB:
+                temp_arr.append(temp_str)
+                temp_str = ""
+            temp_str += i
+            i_ = i
+        temp_arr.append(temp_str)
+        return temp_arr
+
+    def __init__(self, user_name="anon", user_pass=""):
+        super().__init__(user_name, user_pass)
+
+    def read(self, path):
+        super().downloading(path)
+        # print(self.file_name)
+        with open(self.file_name) as file:
             str_id = ""
             temp_curr_time = 0.0
             while line := file.readline():
+                temp_line = line
                 line = line.split()
+
                 if line[0][0] == 'P':
                     temp_arr_ = []
-                    line = line[1:5]
+                    line = self.my_split(temp_line)[1:5]
                     for i in range(0, 4):
+                        # '22525.703927-153056.312033'
                         temp_arr_.append(float(line[i]))
                     self.__All_dict[temp_curr_time].append(temp_arr_)
                 elif line[0] == '*':
@@ -97,7 +112,7 @@ class SP3Reader(FTPReader):
         return self.__All_dict
 
 
-class RinexReader(FTPReader):  # Only for GNSS!!!
+class RINReader(Readers):
     __All_dict = {}
     __Arr_Time = []
     __y_0 = 0
@@ -107,8 +122,16 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
     __m_0 = 0
     __s_0 = 0.
 
-    def __init__(self, url, user_name="anonymous", user_pass=""):
-        super().__init__(url, user_name, user_pass)
+    def __init__(self, user_name: str = "anon", user_pass: str = ""):
+        super().__init__(user_name=user_name, user_pass=user_pass)
+
+    # @property
+    # def URL(self):
+    #     return self.__url
+    #
+    # @URL.setter
+    # def URL(self, url: str):
+    #     self.__url = url
 
     @staticmethod
     def split_to_time(line):
@@ -163,9 +186,8 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
                 bool_d = False
         return arr_line
 
-    def Read_1(self, path, name):
-        super().Read(path, name)
-
+    def read(self, path):
+        super().downloading(path)
         initialize_time = True
         initialize_id = True
 
@@ -173,12 +195,12 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
         id_sheet = []
         time_sheet = []
 
-        current_time = 0.
+        # current_time = 0.
         current_time_temp = 0.
-        previous_time = 0.
+        # previous_time = 0.
         counter_broad = 0
         temp_arr_pos = []
-        with open(name) as file:
+        with open(self.file_name) as file:
             while line := file.readline():
                 line = line.split()
 
@@ -212,7 +234,8 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
 
                     temp_arr_pos.append(line[0])
                     if counter_broad == 3:
-                        flag_broad = False
+                        # flag_broad = False
+                        reading_data = False
                         self.__All_dict[current_time_temp].append(temp_arr_pos)
                         temp_arr_pos = []
                         counter_broad = 0
@@ -227,61 +250,3 @@ class RinexReader(FTPReader):  # Only for GNSS!!!
         # print(time_sheet)
         # print(id_sheet)
         return self.__All_dict
-    def Read(self, path, name):
-        super().Read(path, name)
-        with open(name) as file:
-            counter_broad = 1
-            flag_broad = False
-            init_time = True
-            temp_curr_time = 0.0
-            temp_curr_time_1 = 0.0
-            temp_arr_pos = []
-            temp_id = []
-            flag_to_id = True
-            while line := file.readline():
-                line = line.split()
-
-                if line[0][0] == 'R':
-                    temp_id.append(line[0])
-                    flag_broad = True
-                    if init_time:
-                        init_time = False
-                        [self.__y_0, self.__M_0, self.__d_0,
-                         self.__h_0, self.__m_0, self.__s_0] = self.split_to_time(line)
-                        temp_curr_time = (self.__d_0 - self.__d_0) * 24 + self.__h_0 + self.__m_0 / 60
-                        self.__All_dict[temp_curr_time] = []
-                        temp_curr_time_1 = temp_curr_time
-                    else:
-                        line = self.split_to_time(line)
-                        temp_curr_time = (line[2] - self.__d_0) * 24 + line[3] + line[4] / 60
-                        if not temp_curr_time_1 == temp_curr_time:
-                            # print(temp_curr_time_1, temp_curr_time)
-                            self.__All_dict[temp_curr_time] = []
-                            self.__Arr_Time.append(temp_curr_time_1)
-                            if flag_to_id:
-                                self.__All_dict["Id_Sat"] = temp_id[0:len(temp_id) - 1]
-                                flag_to_id = False
-                            temp_curr_time_1 = temp_curr_time
-
-                elif flag_broad:
-                    counter_broad += 1
-                    if len(line) == 4:
-                        line = self.split_to_exp(line)
-                    else:
-                        temp_line = self.split_to_f_value(line)
-                        line = self.split_to_exp(temp_line)
-                    temp_arr_pos.append(line[0])
-                    if counter_broad == 4:
-                        flag_broad = False
-                        self.__All_dict[temp_curr_time].append(temp_arr_pos)
-                        temp_arr_pos = []
-                        counter_broad = 1
-
-        self.__All_dict["Numb_Sat"] = len(self.__All_dict[temp_curr_time])
-        self.__All_dict["Arr_Time"] = self.__Arr_Time
-
-        print(self.__All_dict["Numb_Sat"])
-        print(self.__All_dict["Id_Sat"])
-        print(self.__All_dict["Arr_Time"])
-
-        return 1
